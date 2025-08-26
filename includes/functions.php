@@ -294,6 +294,7 @@ function maicca_do_archive_cca( $args ) {
 			'taxonomies'    => [],
 			'terms'         => [],
 			'exclude'       => [],
+			'paged'         => 0,
 			'includes'      => [],
 		]
 	);
@@ -308,6 +309,7 @@ function maicca_do_archive_cca( $args ) {
 		'taxonomies'    => $args['taxonomies'] ? array_map( 'esc_html', (array) $args['taxonomies'] ) : [],
 		'terms'         => $args['terms'] ? array_map( 'absint', (array) $args['terms'] ) : [],
 		'exclude'       => $args['exclude'] ? array_map( 'absint', (array) $args['exclude'] ) : [],
+		'paged'         => absint( $args['paged'] ),
 		'includes'      => $args['includes'] ? array_map( 'sanitize_key', (array) $args['includes'] ) : [],
 	];
 
@@ -368,6 +370,14 @@ function maicca_do_archive_cca( $args ) {
 	elseif ( is_search() ) {
 		// Bail if not set to show on search results.
 		if ( ! ( $args['includes'] || in_array( 'search', $args['includes'] ) ) ) {
+			return;
+		}
+	}
+
+	// Pagination.
+	if ( is_paged() && $args['paged'] ) {
+		// Bail if not set to show on this page.
+		if ( get_query_var( 'paged' ) > $args['paged'] ) {
 			return;
 		}
 	}
@@ -531,6 +541,7 @@ function maicca_get_ccas( $use_cache = true ) {
 						'taxonomies'       => get_field( 'maicca_archive_taxonomies' ),
 						'terms'            => get_field( 'maicca_archive_terms' ),
 						'exclude'          => get_field( 'maicca_archive_exclude_terms' ),
+						'paged'            => get_field( 'maicca_archive_paged' ),
 						'includes'         => get_field( 'maicca_archive_includes' ),
 					];
 

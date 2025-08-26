@@ -594,6 +594,16 @@ function maicca_get_fields() {
 			'choices'      => [],
 		],
 		[
+			'label'        => __( 'Paginate page limit', 'mai-custom-content-areas' ),
+			'instructions' => __( 'Limit the amount of paginated pages to display this ad on. Use 0 to display on all pages.', 'mai-custom-content-areas' ),
+			'key'          => 'maicca_archive_paged',
+			'name'         => 'maicca_archive_paged',
+			'type'         => 'number',
+			'default_value' => 0,
+			'min'           => 0,
+			'step'          => 1,
+		],
+		[
 			'label'        => __( 'Includes', 'mai-custom-content-areas' ),
 			'instructions' => 'Show on miscellaneous areas of the website.',
 			'key'          => 'maicca_archive_includes',
