@@ -61,7 +61,7 @@ add_filter( 'acf/load_field/key=maicca_single_types', 'maicca_load_content_types
  * @return array
  */
 function maicca_load_content_types( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -81,7 +81,7 @@ add_filter( 'acf/load_field/key=maicca_single_taxonomy', 'maicca_load_single_tax
  * @return array
  */
 function maicca_load_single_taxonomy( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -90,6 +90,7 @@ function maicca_load_single_taxonomy( $field ) {
 	return $field;
 }
 
+add_filter( 'acf/load_field/key=maicca_single_terms', 'maicca_acf_load_single_terms', 10, 1 );
 /**
  * Get terms from an ajax query.
  * The taxonomy is passed via JS on select2_query_args filter.
@@ -100,9 +101,8 @@ function maicca_load_single_taxonomy( $field ) {
  *
  * @return mixed
  */
-add_filter( 'acf/load_field/key=maicca_single_terms', 'maicca_acf_load_single_terms', 10, 1 );
 function maicca_acf_load_single_terms( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -125,7 +125,7 @@ add_filter( 'acf/prepare_field/key=maicca_single_terms', 'maicca_acf_prepare_sin
  * @return mixed
  */
 function maicca_acf_prepare_single_terms( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -146,7 +146,7 @@ add_filter( 'acf/load_field/key=maicca_archive_types', 'maicca_acf_load_archive_
  * @return mixed
  */
 function maicca_acf_load_archive_post_types( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -167,6 +167,7 @@ function maicca_acf_load_archive_post_types( $field ) {
 	return $field;
 }
 
+add_filter( 'acf/load_field/key=maicca_archive_taxonomies', 'maicca_acf_load_all_taxonomies', 10, 1 );
 /**
  * Gets taxonomy archive choices.
  *
@@ -176,9 +177,8 @@ function maicca_acf_load_archive_post_types( $field ) {
  *
  * @return mixed
  */
-add_filter( 'acf/load_field/key=maicca_archive_taxonomies', 'maicca_acf_load_all_taxonomies', 10, 1 );
 function maicca_acf_load_all_taxonomies( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 
@@ -199,7 +199,7 @@ add_filter( 'acf/load_field/key=maicca_archive_exclude_terms', 'maicca_acf_load_
  * @return mixed
  */
 function maicca_acf_load_all_terms( $field ) {
-	if ( ! is_admin() ) {
+	if ( ! maicca_is_editor() ) {
 		return $field;
 	}
 

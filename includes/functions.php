@@ -30,7 +30,7 @@ function maicca_do_cca( $type, $args ) {
 /**
  * Displays a global content area.
  *
- * @since TBD
+ * @since Unknown
  *
  * @param array $args The content area args.
  *
@@ -779,4 +779,97 @@ function maicca_get_page_ccas( $cca = '' ) {
 	}
 
 	return $cache;
+}
+
+/**
+ * Checks if the current request is in the editor.
+ * For use in block callbacks.
+ *
+ * @access private
+ *
+ * @since 1.11.0
+ *
+ * @return bool
+ */
+function maicca_is_editor() {
+	if ( function_exists( 'mai_is_editor' ) ) {
+		return mai_is_editor();
+	}
+
+	$context = maicca_get_request_context();
+
+	switch ( $context ) {
+		case 'admin';
+		case 'admin_ajax':
+		case 'admin_rest':
+		case 'editor':
+			return true;
+		default:
+			return false;
+	}
+}
+
+/**
+ * Gets the request context.
+ *
+ * @access private
+ *
+ * @since 1.11.0
+ *
+ * @return string
+ */
+function maicca_get_request_context() {
+	if ( function_exists( 'mai_get_request_context' ) ) {
+		return mai_get_request_context();
+	}
+
+	// CLI.
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		return 'cli';
+	}
+
+	// Cron.
+	if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+		return 'cron';
+	}
+
+	// Ajax.
+	if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
+		$ref = wp_get_referer();
+
+		// If the referer is wp-admin (e.g., ACF field loads in editor), treat as admin/editor-ish.
+		if ( $ref && str_starts_with( $ref, admin_url() ) ) {
+			return 'admin_ajax';
+		}
+
+		return 'front_ajax';
+	}
+
+	// REST (used by the block editor for previews/renders and by front-end fetches).
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		$ref = wp_get_referer();
+
+		if ( $ref && str_starts_with( $ref, admin_url() ) ) {
+			return 'admin_rest';
+		}
+
+		return 'front_rest';
+	}
+
+	// Classic admin screens and the editor UI.
+	if ( is_admin() ) {
+		// Detect block editor proper.
+		if ( function_exists( 'get_current_screen' ) ) {
+			$screen = get_current_screen();
+
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
+				return 'editor';
+			}
+		}
+
+		return 'admin';
+	}
+
+	// Default: public front end.
+	return 'front';
 }
