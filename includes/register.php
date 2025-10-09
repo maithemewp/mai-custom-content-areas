@@ -431,42 +431,42 @@ function maicca_get_fields() {
 			],
 		],
 		[
-			'label'             => __( 'Include entries', 'mai-custom-content-areas' ),
-			'instructions'      => __( 'Show on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
-			'key'               => 'maicca_single_entries',
-			'name'              => 'maicca_single_entries',
-			'type'              => 'relationship',
-			'required'          => 0,
-			'post_type'         => '',
-			'taxonomy'          => '',
-			'min'               => '',
-			'max'               => '',
-			'return_format'     => 'id',
-			'filters'           => [
+			'label'         => __( 'Include entries', 'mai-custom-content-areas' ),
+			'instructions'  => __( 'Show on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
+			'key'           => 'maicca_single_entries',
+			'name'          => 'maicca_single_entries',
+			'type'          => 'relationship',
+			'required'      => 0,
+			'post_type'     => '',
+			'taxonomy'      => '',
+			'min'           => '',
+			'max'           => '',
+			'return_format' => 'id',
+			'filters'       => [
 				'search',
 				'post_type',
-				'taxonomy',
+				// 'taxonomy',
 			],
 			'elements'          => [
 				'featured_image',
 			],
 		],
 		[
-			'label'             => __( 'Exclude entries', 'mai-custom-content-areas' ),
-			'instructions'      => __( 'Hide on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
-			'key'               => 'maicca_single_exclude_entries',
-			'name'              => 'maicca_single_exclude_entries',
-			'type'              => 'relationship',
-			'required'          => 0,
-			'post_type'         => '',
-			'taxonomy'          => '',
-			'min'               => '',
-			'max'               => '',
-			'return_format'     => 'id',
-			'filters'           => [
+			'label'         => __( 'Exclude entries', 'mai-custom-content-areas' ),
+			'instructions'  => __( 'Hide on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
+			'key'           => 'maicca_single_exclude_entries',
+			'name'          => 'maicca_single_exclude_entries',
+			'type'          => 'relationship',
+			'required'      => 0,
+			'post_type'     => '',
+			'taxonomy'      => '',
+			'min'           => '',
+			'max'           => '',
+			'return_format' => 'id',
+			'filters'       => [
 				'search',
 				'post_type',
-				'taxonomy',
+				// 'taxonomy',
 			],
 			'elements'          => [
 				'featured_image',
@@ -682,7 +682,7 @@ add_action( 'acf/render_field/key=maicca_archive_location', 'mai_acf_render_afte
 /**
  * Adds notice about using After Footer location with form plugins.
  *
- * @since TBD
+ * @since Unknown
  *
  * @param array $field The field array.
  *
