@@ -7,7 +7,7 @@ add_filter( 'maicca_taxonomies', 'maicca_taxonomies' );
 /**
  * Adds the Mai Display taxonomy to the taxonomies array.
  *
- * @since TBD
+ * @since 1.11.0
  *
  * @param array $taxonomies The taxonomies to use.
  *

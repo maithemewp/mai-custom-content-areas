@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0 (TBD)
+* Added: Support for Mai Display Taxonomy plugin in CCA settings.
+
 ## 1.10.1 (12/5/24)
 * Changed: Updated the updater.
 * Changed: [Performance] Only run ACF filters in the back end for performance.
