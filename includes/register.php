@@ -682,7 +682,7 @@ add_action( 'acf/render_field/key=maicca_archive_location', 'mai_acf_render_afte
 /**
  * Adds notice about using After Footer location with form plugins.
  *
- * @since Unknown
+ * @since 1.10.0
  *
  * @param array $field The field array.
  *

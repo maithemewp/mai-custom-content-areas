@@ -37,7 +37,7 @@ class Mai_CCA_Block {
 	/**
 	 * Callback function to render the block.
 	 *
-	 * @since Unknown
+	 * @since 1.10.0
 	 *
 	 * @param array  $block      The block settings and attributes.
 	 * @param string $content    The block inner HTML (empty).

@@ -276,7 +276,7 @@ function maicca_get_dom_document( $html ) {
 /**
  * Saves HTML from DOMDocument and decode entities.
  *
- * @since Unknown
+ * @since 1.9.6
  *
  * @param DOMDocument $dom
  *

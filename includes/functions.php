@@ -30,7 +30,7 @@ function maicca_do_cca( $type, $args ) {
 /**
  * Displays a global content area.
  *
- * @since Unknown
+ * @since 1.10.0
  *
  * @param array $args The content area args.
  *
@@ -765,7 +765,7 @@ function maicca_entries_wrap_atts( $atts, $context, $markup_args ) {
  *
  * @access private
  *
- * @since Unknown
+ * @since 1.10.0
  *
  * @param string $ad
  *
