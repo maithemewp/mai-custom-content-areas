@@ -369,7 +369,7 @@ function maicca_do_archive_cca( $args ) {
 	// Search results;
 	elseif ( is_search() ) {
 		// Bail if not set to show on search results.
-		if ( ! ( $args['includes'] || in_array( 'search', $args['includes'] ) ) ) {
+		if ( ! ( $args['includes'] && in_array( 'search', $args['includes'] ) ) ) {
 			return;
 		}
 	}

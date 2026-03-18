@@ -190,7 +190,7 @@ function maicca_get_taxonomies() {
 		return $taxonomies;
 	}
 
-	$taxonomies = get_taxonomies( [ 'public' => 'true' ], 'names' );
+	$taxonomies = get_taxonomies( [ 'public' => true ], 'names' );
 
 	$taxonomies = apply_filters( 'maicca_taxonomies', array_values( $taxonomies ) );
 
@@ -201,7 +201,7 @@ function maicca_get_taxonomies() {
 			continue;
 		}
 
-		unset( $taxonomy[ $index ] );
+		unset( $taxonomies[ $index ] );
 	}
 
 	return array_values( $taxonomies );
@@ -589,7 +589,7 @@ function maicca_filter_associative_array( $array ) {
 		if ( '' === $value ) {
 			unset( $array[ $key ] );
 		} elseif ( is_array( $value ) ) {
-			$value = maicca_filter_associative_array( $value );
+			$array[ $key ] = maicca_filter_associative_array( $value );
 		}
 	}
 
