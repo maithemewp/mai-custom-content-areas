@@ -171,11 +171,13 @@ add_filter( 'plugin_action_links_mai-custom-content-areas/mai-custom-content-are
  * @return  array  associative array of plugin action links
  */
 function maicca_add_settings_link( $actions, $plugin_file, $plugin_data, $context ) {
-	$url                 = admin_url( 'edit.php?post_type=mai_template_part' );
-	$link                = sprintf( '<a href="%s">%s</a>', $url, __( 'Content Areas', 'mai-table-of-contents' ) );
-	$actions['settings'] = $link;
+	$url    = admin_url( 'edit.php?post_type=mai_template_part' );
+	$custom = [
+		'settings' => sprintf( '<a href="%s">%s</a>', $url, __( 'Settings', 'mai-custom-content-areas' ) ),
+	];
 
-	return $actions;
+	// Prepend so Settings renders before the core Deactivate link.
+	return array_merge( $custom, $actions );
 }
 
 add_action( 'acf/init', 'maicca_add_settings_metabox' );
