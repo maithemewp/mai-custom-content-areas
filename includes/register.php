@@ -454,6 +454,24 @@ function maicca_get_fields() {
 			],
 		],
 		[
+			'label'             => __( 'Include child entries', 'mai-custom-content-areas' ),
+			'instructions'      => __( 'Also show on any child/descendant entries of the entries selected above.', 'mai-custom-content-areas' ),
+			'key'               => 'maicca_single_entries_descendants',
+			'name'              => 'maicca_single_entries_descendants',
+			'type'              => 'true_false',
+			'required'          => 0,
+			'message'           => __( 'Include descendants of the included entries', 'mai-custom-content-areas' ),
+			'default_value'     => 0,
+			'conditional_logic' => [
+				[
+					[
+						'field'    => 'maicca_single_entries',
+						'operator' => '!=empty',
+					],
+				],
+			],
+		],
+		[
 			'label'         => __( 'Exclude entries', 'mai-custom-content-areas' ),
 			'instructions'  => __( 'Hide on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
 			'key'           => 'maicca_single_exclude_entries',
@@ -472,6 +490,24 @@ function maicca_get_fields() {
 			],
 			'elements'          => [
 				'featured_image',
+			],
+		],
+		[
+			'label'             => __( 'Exclude child entries', 'mai-custom-content-areas' ),
+			'instructions'      => __( 'Also hide on any child/descendant entries of the entries excluded above.', 'mai-custom-content-areas' ),
+			'key'               => 'maicca_single_exclude_entries_descendants',
+			'name'              => 'maicca_single_exclude_entries_descendants',
+			'type'              => 'true_false',
+			'required'          => 0,
+			'message'           => __( 'Exclude descendants of the excluded entries', 'mai-custom-content-areas' ),
+			'default_value'     => 0,
+			'conditional_logic' => [
+				[
+					[
+						'field'    => 'maicca_single_exclude_entries',
+						'operator' => '!=empty',
+					],
+				],
 			],
 		],
 		// This proved too tricky (for now) since 404 doesn't have genesis_before_entry and _entry_content hooks.
