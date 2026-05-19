@@ -110,6 +110,8 @@ function maicca_do_single_cca( $args ) {
 			'authors'             => [],
 			'include'             => [],
 			'exclude'             => [],
+			'include_descendants' => false,
+			'exclude_descendants' => false,
 			// 'includes'            => [],
 		]
 	);
@@ -128,6 +130,8 @@ function maicca_do_single_cca( $args ) {
 		'authors'             => $args['authors'] ? array_map( 'absint', (array) $args['authors'] ) : [],
 		'include'             => $args['include'] ? array_map( 'absint', (array) $args['include'] ) : [],
 		'exclude'             => $args['exclude'] ? array_map( 'absint', (array) $args['exclude'] ) : [],
+		'include_descendants' => (bool) $args['include_descendants'],
+		'exclude_descendants' => (bool) $args['exclude_descendants'],
 		// 'includes'            => $args['includes'] ? array_map( 'sanitize_key', (array) $args['includes'] ) : [],
 	];
 
@@ -141,13 +145,23 @@ function maicca_do_single_cca( $args ) {
 	$post_type = get_post_type();
 	$locations = maicca_get_locations();
 
-	// Bail if excluding this entry.
-	if ( $args['exclude'] && in_array( $post_id, $args['exclude'] ) ) {
-		return;
+	// Bail if excluding this entry (or, optionally, a descendant of an excluded entry).
+	if ( $args['exclude'] ) {
+		if ( in_array( $post_id, $args['exclude'] ) ) {
+			return;
+		}
+
+		if ( $args['exclude_descendants'] && array_intersect( maicca_get_post_ancestors( $post_id ), $args['exclude'] ) ) {
+			return;
+		}
 	}
 
-	// If including this entry.
+	// If including this entry (optionally also descendants of selected entries).
 	$include = $args['include'] && in_array( $post_id, $args['include'] );
+
+	if ( ! $include && $args['include'] && $args['include_descendants'] ) {
+		$include = (bool) array_intersect( maicca_get_post_ancestors( $post_id ), $args['include'] );
+	}
 
 	// If not already including, check post types.
 	// Using '*' is not currently an option. This is here for future use.
@@ -157,8 +171,7 @@ function maicca_do_single_cca( $args ) {
 
 	// If not already including, and have keywords, check for them.
 	if ( ! $include && $args['keywords'] ) {
-		$post         = get_post( $post_id );
-		$post_content = maicca_strtolower( strip_tags( do_shortcode( trim( $post->post_content ) ) ) );
+		$post_content = maicca_get_searchable_content( $post_id );
 
 		if ( ! ( function_exists( 'mai_has_string' ) && mai_has_string( $args['keywords'], $post_content ) ) ) {
 			return;
@@ -478,7 +491,7 @@ function maicca_get_ccas( $use_cache = true ) {
 				'posts_per_page'         => 500,
 				'post__not_in'           => array_values( mai_get_template_part_ids() ),
 				'no_found_rows'          => true,
-				'update_post_meta_cache' => false,
+				'update_post_meta_cache' => true, // Batch-loads all CCA meta before the get_field() loop below.
 				'update_post_term_cache' => false,
 				'suppress_filters'       => false, // https://github.com/10up/Engineering-Best-Practices/issues/116
 				'orderby'                => 'menu_order',
@@ -523,6 +536,8 @@ function maicca_get_ccas( $use_cache = true ) {
 						'authors'             => get_field( 'maicca_single_authors' ),
 						'include'             => get_field( 'maicca_single_entries' ),
 						'exclude'             => get_field( 'maicca_single_exclude_entries' ),
+						'include_descendants' => get_field( 'maicca_single_entries_descendants' ),
+						'exclude_descendants' => get_field( 'maicca_single_exclude_entries_descendants' ),
 						// 'includes'            => get_field( 'maicca_single_includes' ),
 					];
 
