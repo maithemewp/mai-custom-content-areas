@@ -1,5 +1,4 @@
 {
-  "apiVersion": 3,
   "name": "acf/mai-cca",
   "title": "Mai Custom Content Area",
   "description": "Display a custom content area anywhere blocks are allowed.",
@@ -7,7 +6,7 @@
   "keywords": [ "cca", "content", "area" ],
   "textdomain": "mai-custom-content-areas",
   "acf": {
-    "mode": "preview"
+    "blockVersion": 3
   },
   "supports": {
     "align": [ "full" ],
