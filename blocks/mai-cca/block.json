@@ -1,4 +1,5 @@
 {
+  "apiVersion": 3,
   "name": "acf/mai-cca",
   "title": "Mai Custom Content Area",
   "description": "Display a custom content area anywhere blocks are allowed.",
