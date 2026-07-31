@@ -13,7 +13,7 @@
 * Fixed: Nested empty values not being filtered from transient cache.
 * Fixed: Taxonomy query using incorrect type for public parameter.
 * Fixed: Disabled taxonomy filter on ACF relationship fields.
-* Fixed: [Security] Hardened content rendering so markup that was escaped in the editor stays escaped on the front end.
+* Fixed: [Security] Improved security when rendering content.
 
 ## 1.10.1 (12/5/24)
 * Changed: Updated the updater.
