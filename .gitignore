@@ -3,3 +3,6 @@
 .AppleDouble
 .LSOverride
 node_modules
+
+# Regenerates with the current git ref, so tracking it dirties the tree after every commit.
+/vendor/composer/installed.php
