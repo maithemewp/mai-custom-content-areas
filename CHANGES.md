@@ -13,6 +13,7 @@
 * Fixed: Nested empty values not being filtered from transient cache.
 * Fixed: Taxonomy query using incorrect type for public parameter.
 * Fixed: Disabled taxonomy filter on ACF relationship fields.
+* Fixed: [Performance] Images added by shortcodes in a content area were missing lazy loading and responsive image attributes on sites without Mai Engine.
 * Fixed: [Security] Improved security when rendering content.
 
 ## 1.10.1 (12/5/24)

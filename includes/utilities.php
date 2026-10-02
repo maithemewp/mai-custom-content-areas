@@ -524,9 +524,10 @@ function maicca_get_processed_content( $content ) {
 	$content = wptexturize( $content );                    // WP runs priority 10.
 	$content = ! $blocks ? wpautop( $content ) : $content; // WP runs priority 10.
 	$content = shortcode_unautop( $content );              // WP runs priority 10.
-	$content = function_exists( 'wp_filter_content_tags' ) ? wp_filter_content_tags( $content ) : wp_make_content_images_responsive( $content ); // WP runs priority 10. WP 5.5 with fallback.
 	$content = do_shortcode( $content );                   // WP runs priority 11.
+	$content = wp_filter_content_tags( $content );         // WP runs priority 12.
 	$content = convert_smilies( $content );                // WP runs priority 20.
+	$content = str_replace( ']]>', ']]&gt;', $content );
 
 	return $content;
 }
