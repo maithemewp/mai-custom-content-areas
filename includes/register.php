@@ -171,11 +171,13 @@ add_filter( 'plugin_action_links_mai-custom-content-areas/mai-custom-content-are
  * @return  array  associative array of plugin action links
  */
 function maicca_add_settings_link( $actions, $plugin_file, $plugin_data, $context ) {
-	$url                 = admin_url( 'edit.php?post_type=mai_template_part' );
-	$link                = sprintf( '<a href="%s">%s</a>', $url, __( 'Content Areas', 'mai-table-of-contents' ) );
-	$actions['settings'] = $link;
+	$url    = admin_url( 'edit.php?post_type=mai_template_part' );
+	$custom = [
+		'settings' => sprintf( '<a href="%s">%s</a>', $url, __( 'Settings', 'mai-custom-content-areas' ) ),
+	];
 
-	return $actions;
+	// Prepend so Settings renders before the core Deactivate link.
+	return array_merge( $custom, $actions );
 }
 
 add_action( 'acf/init', 'maicca_add_settings_metabox' );
@@ -431,45 +433,81 @@ function maicca_get_fields() {
 			],
 		],
 		[
-			'label'             => __( 'Include entries', 'mai-custom-content-areas' ),
-			'instructions'      => __( 'Show on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
-			'key'               => 'maicca_single_entries',
-			'name'              => 'maicca_single_entries',
-			'type'              => 'relationship',
-			'required'          => 0,
-			'post_type'         => '',
-			'taxonomy'          => '',
-			'min'               => '',
-			'max'               => '',
-			'return_format'     => 'id',
-			'filters'           => [
+			'label'         => __( 'Include entries', 'mai-custom-content-areas' ),
+			'instructions'  => __( 'Show on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
+			'key'           => 'maicca_single_entries',
+			'name'          => 'maicca_single_entries',
+			'type'          => 'relationship',
+			'required'      => 0,
+			'post_type'     => '',
+			'taxonomy'      => '',
+			'min'           => '',
+			'max'           => '',
+			'return_format' => 'id',
+			'filters'       => [
 				'search',
 				'post_type',
-				'taxonomy',
+				// 'taxonomy',
 			],
 			'elements'          => [
 				'featured_image',
 			],
 		],
 		[
-			'label'             => __( 'Exclude entries', 'mai-custom-content-areas' ),
-			'instructions'      => __( 'Hide on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
-			'key'               => 'maicca_single_exclude_entries',
-			'name'              => 'maicca_single_exclude_entries',
-			'type'              => 'relationship',
+			'label'             => __( 'Include child entries', 'mai-custom-content-areas' ),
+			'instructions'      => __( 'Also show on any child/descendant entries of the entries selected above.', 'mai-custom-content-areas' ),
+			'key'               => 'maicca_single_entries_descendants',
+			'name'              => 'maicca_single_entries_descendants',
+			'type'              => 'true_false',
 			'required'          => 0,
-			'post_type'         => '',
-			'taxonomy'          => '',
-			'min'               => '',
-			'max'               => '',
-			'return_format'     => 'id',
-			'filters'           => [
+			'message'           => __( 'Include descendants of the included entries', 'mai-custom-content-areas' ),
+			'default_value'     => 0,
+			'conditional_logic' => [
+				[
+					[
+						'field'    => 'maicca_single_entries',
+						'operator' => '!=empty',
+					],
+				],
+			],
+		],
+		[
+			'label'         => __( 'Exclude entries', 'mai-custom-content-areas' ),
+			'instructions'  => __( 'Hide on specific entries regardless of content type and taxonomy conditions.', 'mai-custom-content-areas' ),
+			'key'           => 'maicca_single_exclude_entries',
+			'name'          => 'maicca_single_exclude_entries',
+			'type'          => 'relationship',
+			'required'      => 0,
+			'post_type'     => '',
+			'taxonomy'      => '',
+			'min'           => '',
+			'max'           => '',
+			'return_format' => 'id',
+			'filters'       => [
 				'search',
 				'post_type',
-				'taxonomy',
+				// 'taxonomy',
 			],
 			'elements'          => [
 				'featured_image',
+			],
+		],
+		[
+			'label'             => __( 'Exclude child entries', 'mai-custom-content-areas' ),
+			'instructions'      => __( 'Also hide on any child/descendant entries of the entries excluded above.', 'mai-custom-content-areas' ),
+			'key'               => 'maicca_single_exclude_entries_descendants',
+			'name'              => 'maicca_single_exclude_entries_descendants',
+			'type'              => 'true_false',
+			'required'          => 0,
+			'message'           => __( 'Exclude descendants of the excluded entries', 'mai-custom-content-areas' ),
+			'default_value'     => 0,
+			'conditional_logic' => [
+				[
+					[
+						'field'    => 'maicca_single_exclude_entries',
+						'operator' => '!=empty',
+					],
+				],
 			],
 		],
 		// This proved too tricky (for now) since 404 doesn't have genesis_before_entry and _entry_content hooks.
@@ -594,6 +632,16 @@ function maicca_get_fields() {
 			'choices'      => [],
 		],
 		[
+			'label'        => __( 'Paginate page limit', 'mai-custom-content-areas' ),
+			'instructions' => __( 'Limit the amount of paginated pages to display this ad on. Use 0 to display on all pages.', 'mai-custom-content-areas' ),
+			'key'          => 'maicca_archive_paged',
+			'name'         => 'maicca_archive_paged',
+			'type'         => 'number',
+			'default_value' => 0,
+			'min'           => 0,
+			'step'          => 1,
+		],
+		[
 			'label'        => __( 'Includes', 'mai-custom-content-areas' ),
 			'instructions' => 'Show on miscellaneous areas of the website.',
 			'key'          => 'maicca_archive_includes',
@@ -672,7 +720,7 @@ add_action( 'acf/render_field/key=maicca_archive_location', 'mai_acf_render_afte
 /**
  * Adds notice about using After Footer location with form plugins.
  *
- * @since TBD
+ * @since 1.10.0
  *
  * @param array $field The field array.
  *

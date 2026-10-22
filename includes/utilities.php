@@ -190,7 +190,7 @@ function maicca_get_taxonomies() {
 		return $taxonomies;
 	}
 
-	$taxonomies = get_taxonomies( [ 'public' => 'true' ], 'names' );
+	$taxonomies = get_taxonomies( [ 'public' => true ], 'names' );
 
 	$taxonomies = apply_filters( 'maicca_taxonomies', array_values( $taxonomies ) );
 
@@ -201,7 +201,7 @@ function maicca_get_taxonomies() {
 			continue;
 		}
 
-		unset( $taxonomy[ $index ] );
+		unset( $taxonomies[ $index ] );
 	}
 
 	return array_values( $taxonomies );
@@ -240,6 +240,13 @@ function maicca_get_taxonomy_choices() {
  * @return DOMDocument
  */
 function maicca_get_dom_document( $html ) {
+	// Mai Engine owns the canonical implementation, in lib/functions/utilities.php. Prefer it
+	// so there is one copy to maintain. The local fallback below exists only for the case
+	// where this plugin somehow runs without it, and must stay behavior-identical.
+	if ( function_exists( 'mai_get_dom_document' ) ) {
+		return mai_get_dom_document( $html );
+	}
+
 	// Create the new document.
 	$dom = new DOMDocument();
 
@@ -274,19 +281,48 @@ function maicca_get_dom_document( $html ) {
 }
 
 /**
- * Saves HTML from DOMDocument and decode entities.
+ * Saves HTML from DOMDocument and decodes entities, except those that would turn escaped
+ * text back into live markup.
  *
- * @since TBD
+ * @since 1.9.6
+ * @since 1.11.0 Stop decoding entities that would produce markup characters.
  *
  * @param DOMDocument $dom
  *
  * @return string
  */
 function maicca_get_dom_html( $dom ) {
-	$html = $dom->saveHTML();
-	$html = mb_convert_encoding( $html, 'UTF-8', 'HTML-ENTITIES' );
+	// Mai Engine owns the canonical implementation, in lib/functions/utilities.php. Prefer it
+	// so there is one copy to maintain.
+	if ( function_exists( 'mai_get_dom_html' ) ) {
+		return mai_get_dom_html( $dom );
+	}
 
-	return $html;
+	// Fallback for running without Mai Engine. This MUST stay behavior-identical to the
+	// canonical version: it is the live code path on those sites, not dead code.
+	//
+	// This previously ran mb_convert_encoding( $html, 'UTF-8', 'HTML-ENTITIES' ), which
+	// decoded everything and so un-escaped what DOMDocument had deliberately escaped. Text an
+	// author typed as &lt;script&gt; came back out as a live script tag, and JSON in a data
+	// attribute was broken out of its own quotes. Decode by result instead: anything that
+	// would decode to a character capable of creating markup or ending an attribute value
+	// stays escaped, everything else decodes as before.
+	static $structural = [ '<', '>', '"', "'" ];
+
+	return preg_replace_callback(
+		'/&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[A-Za-z][A-Za-z0-9]*);/',
+		static function ( $match ) use ( $structural ) {
+			$decoded = html_entity_decode( $match[0], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+			// Unknown entity: html_entity_decode hands it back unchanged. Leave it alone.
+			if ( $decoded === $match[0] ) {
+				return $match[0];
+			}
+
+			return in_array( $decoded, $structural, true ) ? $match[0] : $decoded;
+		},
+		$dom->saveHTML()
+	);
 }
 
 /**
@@ -363,10 +399,34 @@ function maicca_add_cca( $content, $cca_content, $args ) {
 	 * @link https://stackoverflow.com/questions/4645738/domdocument-appendxml-with-special-characters
 	 * @link https://www.py4u.net/discuss/974358
 	 */
-	$tmp  = maicca_get_dom_document( $cca_content );
-	$node = $dom->importNode( $tmp->documentElement, true );
+	$tmp    = maicca_get_dom_document( $cca_content );
+	$insert = [];
 
-	if ( ! $node ) {
+	foreach ( $tmp->childNodes as $node ) {
+		if ( ! $node instanceof DOMElement ) {
+			continue;
+		}
+
+		$insert[] = $dom->importNode( $node, true );
+	}
+
+	if ( ! $insert ) {
+		return $content;
+	}
+
+	// Reverse the array if displaying after or prepending, so they end up in the right order.
+	// After would put each element directly after the target, so they would end up in reverse order.
+	// Prepend would put each element directly before the first child of the target, so they would end up in reverse order.
+	if ( $after ) {
+		$insert = array_reverse( $insert );
+	}
+
+	// Filter only DOMElement nodes from array.
+	$insert = array_filter( $insert, function( $node ) {
+		return $node instanceof DOMElement;
+	});
+
+	if ( ! $insert ) {
 		return $content;
 	}
 
@@ -389,16 +449,22 @@ function maicca_add_cca( $content, $cca_content, $args ) {
 				break;
 			}
 
-			/**
-			 * Add cca after this element. There is no insertAfter() in PHP ¯\_(ツ)_/¯.
-			 *
-			 * @link https://gist.github.com/deathlyfrantic/cd8d7ef8ba91544cdf06
-			 */
-			$element->parentNode->insertBefore( $node, $element->nextSibling );
+			foreach ( $insert as $node ) {
+				/**
+				 * Add cca after this element. There is no insertAfter() in PHP ¯\_(ツ)_/¯.
+				 *
+				 * @link https://gist.github.com/deathlyfrantic/cd8d7ef8ba91544cdf06
+				 */
+				$element->parentNode->insertBefore( $node, $element->nextSibling );
+			}
+
 		}
 		// Before headings.
 		else {
-			$element->parentNode->insertBefore( $node, $element );
+
+			foreach ( $insert as $node ) {
+				$element->parentNode->insertBefore( $node, $element );
+			}
 		}
 
 		// No need to keep looping.
@@ -458,9 +524,10 @@ function maicca_get_processed_content( $content ) {
 	$content = wptexturize( $content );                    // WP runs priority 10.
 	$content = ! $blocks ? wpautop( $content ) : $content; // WP runs priority 10.
 	$content = shortcode_unautop( $content );              // WP runs priority 10.
-	$content = function_exists( 'wp_filter_content_tags' ) ? wp_filter_content_tags( $content ) : wp_make_content_images_responsive( $content ); // WP runs priority 10. WP 5.5 with fallback.
 	$content = do_shortcode( $content );                   // WP runs priority 11.
+	$content = wp_filter_content_tags( $content );         // WP runs priority 12.
 	$content = convert_smilies( $content );                // WP runs priority 20.
+	$content = str_replace( ']]>', ']]&gt;', $content );
 
 	return $content;
 }
@@ -559,7 +626,7 @@ function maicca_filter_associative_array( $array ) {
 		if ( '' === $value ) {
 			unset( $array[ $key ] );
 		} elseif ( is_array( $value ) ) {
-			$value = maicca_filter_associative_array( $value );
+			$array[ $key ] = maicca_filter_associative_array( $value );
 		}
 	}
 

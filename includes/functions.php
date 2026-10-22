@@ -30,7 +30,7 @@ function maicca_do_cca( $type, $args ) {
 /**
  * Displays a global content area.
  *
- * @since TBD
+ * @since 1.10.0
  *
  * @param array $args The content area args.
  *
@@ -110,6 +110,8 @@ function maicca_do_single_cca( $args ) {
 			'authors'             => [],
 			'include'             => [],
 			'exclude'             => [],
+			'include_descendants' => false,
+			'exclude_descendants' => false,
 			// 'includes'            => [],
 		]
 	);
@@ -128,6 +130,8 @@ function maicca_do_single_cca( $args ) {
 		'authors'             => $args['authors'] ? array_map( 'absint', (array) $args['authors'] ) : [],
 		'include'             => $args['include'] ? array_map( 'absint', (array) $args['include'] ) : [],
 		'exclude'             => $args['exclude'] ? array_map( 'absint', (array) $args['exclude'] ) : [],
+		'include_descendants' => (bool) $args['include_descendants'],
+		'exclude_descendants' => (bool) $args['exclude_descendants'],
 		// 'includes'            => $args['includes'] ? array_map( 'sanitize_key', (array) $args['includes'] ) : [],
 	];
 
@@ -141,13 +145,23 @@ function maicca_do_single_cca( $args ) {
 	$post_type = get_post_type();
 	$locations = maicca_get_locations();
 
-	// Bail if excluding this entry.
-	if ( $args['exclude'] && in_array( $post_id, $args['exclude'] ) ) {
-		return;
+	// Bail if excluding this entry (or, optionally, a descendant of an excluded entry).
+	if ( $args['exclude'] ) {
+		if ( in_array( $post_id, $args['exclude'] ) ) {
+			return;
+		}
+
+		if ( $args['exclude_descendants'] && array_intersect( maicca_get_post_ancestors( $post_id ), $args['exclude'] ) ) {
+			return;
+		}
 	}
 
-	// If including this entry.
+	// If including this entry (optionally also descendants of selected entries).
 	$include = $args['include'] && in_array( $post_id, $args['include'] );
+
+	if ( ! $include && $args['include'] && $args['include_descendants'] ) {
+		$include = (bool) array_intersect( maicca_get_post_ancestors( $post_id ), $args['include'] );
+	}
 
 	// If not already including, check post types.
 	// Using '*' is not currently an option. This is here for future use.
@@ -157,8 +171,7 @@ function maicca_do_single_cca( $args ) {
 
 	// If not already including, and have keywords, check for them.
 	if ( ! $include && $args['keywords'] ) {
-		$post         = get_post( $post_id );
-		$post_content = maicca_strtolower( strip_tags( do_shortcode( trim( $post->post_content ) ) ) );
+		$post_content = maicca_get_searchable_content( $post_id );
 
 		if ( ! ( function_exists( 'mai_has_string' ) && mai_has_string( $args['keywords'], $post_content ) ) ) {
 			return;
@@ -294,6 +307,7 @@ function maicca_do_archive_cca( $args ) {
 			'taxonomies'    => [],
 			'terms'         => [],
 			'exclude'       => [],
+			'paged'         => 0,
 			'includes'      => [],
 		]
 	);
@@ -308,6 +322,7 @@ function maicca_do_archive_cca( $args ) {
 		'taxonomies'    => $args['taxonomies'] ? array_map( 'esc_html', (array) $args['taxonomies'] ) : [],
 		'terms'         => $args['terms'] ? array_map( 'absint', (array) $args['terms'] ) : [],
 		'exclude'       => $args['exclude'] ? array_map( 'absint', (array) $args['exclude'] ) : [],
+		'paged'         => absint( $args['paged'] ),
 		'includes'      => $args['includes'] ? array_map( 'sanitize_key', (array) $args['includes'] ) : [],
 	];
 
@@ -367,7 +382,15 @@ function maicca_do_archive_cca( $args ) {
 	// Search results;
 	elseif ( is_search() ) {
 		// Bail if not set to show on search results.
-		if ( ! ( $args['includes'] || in_array( 'search', $args['includes'] ) ) ) {
+		if ( ! ( $args['includes'] && in_array( 'search', $args['includes'] ) ) ) {
+			return;
+		}
+	}
+
+	// Pagination.
+	if ( is_paged() && $args['paged'] ) {
+		// Bail if not set to show on this page.
+		if ( get_query_var( 'paged' ) > $args['paged'] ) {
 			return;
 		}
 	}
@@ -468,7 +491,7 @@ function maicca_get_ccas( $use_cache = true ) {
 				'posts_per_page'         => 500,
 				'post__not_in'           => array_values( mai_get_template_part_ids() ),
 				'no_found_rows'          => true,
-				'update_post_meta_cache' => false,
+				'update_post_meta_cache' => true, // Batch-loads all CCA meta before the get_field() loop below.
 				'update_post_term_cache' => false,
 				'suppress_filters'       => false, // https://github.com/10up/Engineering-Best-Practices/issues/116
 				'orderby'                => 'menu_order',
@@ -513,6 +536,8 @@ function maicca_get_ccas( $use_cache = true ) {
 						'authors'             => get_field( 'maicca_single_authors' ),
 						'include'             => get_field( 'maicca_single_entries' ),
 						'exclude'             => get_field( 'maicca_single_exclude_entries' ),
+						'include_descendants' => get_field( 'maicca_single_entries_descendants' ),
+						'exclude_descendants' => get_field( 'maicca_single_exclude_entries_descendants' ),
 						// 'includes'            => get_field( 'maicca_single_includes' ),
 					];
 
@@ -531,6 +556,7 @@ function maicca_get_ccas( $use_cache = true ) {
 						'taxonomies'       => get_field( 'maicca_archive_taxonomies' ),
 						'terms'            => get_field( 'maicca_archive_terms' ),
 						'exclude'          => get_field( 'maicca_archive_exclude_terms' ),
+						'paged'            => get_field( 'maicca_archive_paged' ),
 						'includes'         => get_field( 'maicca_archive_includes' ),
 					];
 
@@ -754,7 +780,7 @@ function maicca_entries_wrap_atts( $atts, $context, $markup_args ) {
  *
  * @access private
  *
- * @since Unknown
+ * @since 1.10.0
  *
  * @param string $ad
  *
@@ -768,4 +794,97 @@ function maicca_get_page_ccas( $cca = '' ) {
 	}
 
 	return $cache;
+}
+
+/**
+ * Checks if the current request is in the editor.
+ * For use in block callbacks.
+ *
+ * @access private
+ *
+ * @since 1.11.0
+ *
+ * @return bool
+ */
+function maicca_is_editor() {
+	if ( function_exists( 'mai_is_editor' ) ) {
+		return mai_is_editor();
+	}
+
+	$context = maicca_get_request_context();
+
+	switch ( $context ) {
+		case 'admin';
+		case 'admin_ajax':
+		case 'admin_rest':
+		case 'editor':
+			return true;
+		default:
+			return false;
+	}
+}
+
+/**
+ * Gets the request context.
+ *
+ * @access private
+ *
+ * @since 1.11.0
+ *
+ * @return string
+ */
+function maicca_get_request_context() {
+	if ( function_exists( 'mai_get_request_context' ) ) {
+		return mai_get_request_context();
+	}
+
+	// CLI.
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		return 'cli';
+	}
+
+	// Cron.
+	if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+		return 'cron';
+	}
+
+	// Ajax.
+	if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
+		$ref = wp_get_referer();
+
+		// If the referer is wp-admin (e.g., ACF field loads in editor), treat as admin/editor-ish.
+		if ( $ref && str_starts_with( $ref, admin_url() ) ) {
+			return 'admin_ajax';
+		}
+
+		return 'front_ajax';
+	}
+
+	// REST (used by the block editor for previews/renders and by front-end fetches).
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		$ref = wp_get_referer();
+
+		if ( $ref && str_starts_with( $ref, admin_url() ) ) {
+			return 'admin_rest';
+		}
+
+		return 'front_rest';
+	}
+
+	// Classic admin screens and the editor UI.
+	if ( is_admin() ) {
+		// Detect block editor proper.
+		if ( function_exists( 'get_current_screen' ) ) {
+			$screen = get_current_screen();
+
+			if ( $screen && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
+				return 'editor';
+			}
+		}
+
+		return 'admin';
+	}
+
+	// Default: public front end.
+	return 'front';
 }

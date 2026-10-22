@@ -6,7 +6,7 @@
   "keywords": [ "cca", "content", "area" ],
   "textdomain": "mai-custom-content-areas",
   "acf": {
-    "mode": "preview"
+    "blockVersion": 3
   },
   "supports": {
     "align": [ "full" ],

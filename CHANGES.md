@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.11.0 (10/22/26)
+* Added: Support for Mai Display Taxonomy plugin in CCA settings.
+* Added: Pagination setting for archive content areas.
+* Added: Support for multiple top-level elements in-content.
+* Added: "Include child entries" and "Exclude child entries" options to also show/hide a content area on descendants of the included/excluded entries.
+* Changed: Requires PHP 8.1 or later.
+* Changed: Updated the updater.
+* Changed: [Performance] Memoized keyword content processing and primed post meta on the content-area cache rebuild.
+* Changed: Uses `maicca_is_editor()` helper instead of just `is_admin()`.
+* Fixed: Content areas showing on search results regardless of settings.
+* Fixed: Non-existent taxonomies not being removed from taxonomy list.
+* Fixed: Nested empty values not being filtered from transient cache.
+* Fixed: Taxonomy query using incorrect type for public parameter.
+* Fixed: Disabled taxonomy filter on ACF relationship fields.
+* Fixed: [Performance] Images added by shortcodes in a content area were missing lazy loading and responsive image attributes on sites without Mai Engine.
+* Fixed: [Security] Improved security when rendering content.
+
 ## 1.10.1 (12/5/24)
 * Changed: Updated the updater.
 * Changed: [Performance] Only run ACF filters in the back end for performance.
