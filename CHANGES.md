@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.11.0 (TBD)
+## 1.11.0 (10/22/26)
 * Added: Support for Mai Display Taxonomy plugin in CCA settings.
 * Added: Pagination setting for archive content areas.
 * Added: Support for multiple top-level elements in-content.
 * Added: "Include child entries" and "Exclude child entries" options to also show/hide a content area on descendants of the included/excluded entries.
+* Changed: Requires PHP 8.1 or later.
 * Changed: Updated the updater.
 * Changed: [Performance] Memoized keyword content processing and primed post meta on the content-area cache rebuild.
 * Changed: Uses `maicca_is_editor()` helper instead of just `is_admin()`.
